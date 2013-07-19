@@ -5,18 +5,17 @@ module Capybara
   module Select2
     def select2(value, options = {})
       raise "Must pass a hash containing 'from' or 'xpath'" unless options.is_a?(Hash) and [:from, :xpath].any? { |k| options.has_key? k }
-
+  
       if options.has_key? :xpath
         select2_container = first(:xpath, options[:xpath])
       else
         select_name = options[:from]
         select2_container = first("label", text: select_name).find(:xpath, '..').find(".select2-container")
       end
-      
       if options[:multi] 
-        select2_container.find(".select2-choices").click
+        page.execute_script %Q{ $(".select2-choices a").trigger('mousedown')}
       else
-        select2_container.find(".select2-choice").click
+        page.execute_script %Q{ $(".select2-choice a").trigger('mousedown')}
       end
       
       if options.has_key? :search
@@ -26,14 +25,14 @@ module Capybara
       else
         drop_container = ".select2-drop"
       end
-      
-        
-
+  
       [value].flatten.each do |value|
         select2_container.find(:xpath, "a[contains(concat(' ',normalize-space(@class),' '),' select2-choice ')] | ul[contains(concat(' ',normalize-space(@class),' '),' select2-choices ')]").trigger('click')
-        find(:xpath, "//body").find("#{drop_container} li", text: value).trigger('click')
+        sleep 1
+        page.execute_script(%|$("#{drop_container} li:contains('#{value}')").trigger('mouseup');|)
       end
     end
+
   end
 end
 
